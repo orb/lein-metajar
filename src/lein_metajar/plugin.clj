@@ -1,6 +1,11 @@
 (ns lein-metajar.plugin
-  (:require [leiningen.core.main :as main]
-            [leiningen.metajar :as metajar]))
+  (:require [leiningen.metajar :as metajar]))
+
+
+(defn add-metajar-profile [project]
+  (assoc-in project
+            [:profiles :metajar :manifest "Class-Path"]
+            metajar/manifest-class-path))
 
 (defn middleware [project]
-  (assoc-in project [:manifest "Class-Path"] metajar/manifest-class-path))
+  (vary-meta project add-metajar-profile))

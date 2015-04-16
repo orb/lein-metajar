@@ -4,7 +4,7 @@
             [leiningen.core.classpath :as classpath]
             [leiningen.core.main :as main]
             [leiningen.jar :as jar]
-            [robert.hooke]))
+            [leiningen.uberjar :as uberjar]))
 
 (defn meta-libdir [project]
   (io/file (:root project) "target" "lib"))
@@ -35,15 +35,18 @@
 
 (defn metajar
   "Create the metajar, because... META"
-  [project & args]
+  [project]
+
+  ;; make the basic jar
+  (jar/jar (project/merge-profiles project [:metajar]))
+
+  ;; after jar because jar does a clean
   (let [target-dir (meta-libdir project)
         jars (updated-jar-list project)]
 
-    (jar/jar project)
-
-    ;; after jar because jar does a clean
     (copy-files-to jars target-dir)
-    (main/info "Copied" (count jars) "file(s) to:" (.getAbsolutePath target-dir))))
+    (main/info "Copied" (count jars) "dependencies to target:" (.getName target-dir))))
+
 
 
 

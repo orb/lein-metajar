@@ -46,14 +46,3 @@
 
     (copy-files-to jars target-dir)
     (main/info "Copied" (count jars) "dependencies to target:" (.getName target-dir))))
-
-
-
-
-
-
-
-
-
-
-

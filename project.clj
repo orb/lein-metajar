@@ -1,4 +1,4 @@
-(defproject lein-metajar "0.1.0"
+(defproject lein-metajar "0.1.1-SNAPSHOT"
   :description "Create a METAJAR"
   :url "https://github.com/orb/lein-metajar"
   :license {:name "Eclipse Public License"

@@ -2,10 +2,8 @@
   (:require [leiningen.metajar :as metajar]))
 
 (defn add-metajar-profile [project]
-  (assoc-in project [:profiles :metajar]
-            {:manifest {"Class-Path" metajar/manifest-class-path}
-             :aot [:all]}))
-
+  (update-in project [:profiles :metajar]
+             merge {:manifest {"Class-Path" metajar/manifest-class-path}}))
 
 (defn middleware [project]
   (vary-meta project add-metajar-profile))

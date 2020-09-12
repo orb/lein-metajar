@@ -15,7 +15,7 @@ JVM classpath, just as with an uberjar.
 
 ## Usage
 
-Add `[lein-metajar "0.1.1-SNAPSHOT"]` the `:plugins` vector of your `:user` profile or your `project.clj`.
+Add `[lein-metajar "0.1.2"]` the `:plugins` vector of your `:user` profile or your `project.clj`.
 
 
 To create the METAJAR:

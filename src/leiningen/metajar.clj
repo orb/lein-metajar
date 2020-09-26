@@ -1,13 +1,23 @@
 (ns leiningen.metajar
   (:require [clojure.java.io :as io]
+            [clojure.string :as str]
             [leiningen.core.project :as project]
             [leiningen.core.classpath :as classpath]
             [leiningen.core.main :as main]
             [leiningen.jar :as jar]
             [leiningen.uberjar :as uberjar]))
 
+(defn- libpath [project]
+  (let [project (project/merge-profiles project [:metajar])
+        path (or (:libdir project) "lib")]
+    (if (str/ends-with? path "/")
+      path
+      (str path \/))))
+
+
 (defn meta-libdir [project]
-  (io/file (:root project) "target" "lib"))
+  (io/file (:target-path project)
+           (libpath project)))
 
 (defn file-exists [f]
   (.exists f))
@@ -27,7 +37,8 @@
       (io/copy file destination-file))))
 
 (defn manifest-class-path [project]
-  (let [under-lib      #(str "lib/" (.getName %))
+  (let [path           (libpath project)
+        under-lib      #(str path (.getName %))
         jars           (updated-jar-list project)
         relative-paths (map under-lib jars)
         path           (clojure.string/join " " relative-paths)]

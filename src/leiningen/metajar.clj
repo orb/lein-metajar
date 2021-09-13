@@ -26,8 +26,9 @@
   (filter file-exists
           (classpath/resolve-dependencies :dependencies project)))
 
+;; Deprecated
 (defn updated-jar-list [project]
-  (let [updated-project (project/unmerge-profiles project [:dev :provided])]
+  (let [updated-project (project/set-profiles project [:metajar])]
     (dependent-jars updated-project)))
 
 (defn copy-files-to [files destination]
@@ -39,7 +40,7 @@
 (defn manifest-class-path [project]
   (let [path           (libpath project)
         under-lib      #(str path (.getName %))
-        jars           (updated-jar-list project)
+        jars           (dependent-jars (project/set-profiles project [:metajar :provided]))
         relative-paths (map under-lib jars)
         path           (clojure.string/join " " relative-paths)]
     path))
@@ -53,7 +54,7 @@
 
   ;; after jar because jar does a clean
   (let [target-dir (meta-libdir project)
-        jars (updated-jar-list project)]
+        jars (dependent-jars (project/set-profiles project [:metajar]))]
 
     (copy-files-to jars target-dir)
     (main/info "Copied" (count jars) "dependencies to target:" (.getName target-dir))))

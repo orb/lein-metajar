@@ -7,6 +7,7 @@
             [leiningen.jar :as jar]
             [leiningen.uberjar :as uberjar]))
 
+;; Deprecated
 (defn- libpath [project]
   (let [project (project/merge-profiles project [:metajar])
         path (or (:libdir project) "lib")]
@@ -17,10 +18,25 @@
 
 (defn meta-libdir [project]
   (io/file (:target-path project)
-           (libpath project)))
+           (:libdir project)))
 
 (defn file-exists [f]
   (.exists f))
+
+(defn normalize
+  [path]
+  (.getCanonicalPath (io/file path)))
+
+(defn parent?
+  [parent child]
+  (= (normalize parent) (.getParent (io/file (normalize child)))))
+
+(defn ancestor?
+  [parent child]
+  (let [parent (normalize parent)
+        child (normalize child)]
+    (boolean (some (partial parent? parent)
+                   (take-while (complement nil?) (iterate #(when (seq %) (.getParent (io/file %))) child))))))
 
 (defn dependent-jars [project]
   (filter file-exists
@@ -38,23 +54,30 @@
       (io/copy file destination-file))))
 
 (defn manifest-class-path [project]
-  (let [path           (libpath project)
+  (let [path           (:libdir project)
         under-lib      #(str path (.getName %))
         jars           (dependent-jars (project/set-profiles project [:metajar :provided]))
         relative-paths (map under-lib jars)
         path           (clojure.string/join " " relative-paths)]
+    (main/info "Wrote" (count relative-paths) "dependencies to MANIFEST.MF")
     path))
 
 (defn metajar
   "Create the metajar, because... META"
   [project]
 
-  ;; make the basic jar
-  (jar/jar (project/merge-profiles project [:metajar]))
+  (let [base-target (:target-path project)
+        project (project/set-profiles project [:metajar])
+        target-dir (meta-libdir project)]
 
-  ;; after jar because jar does a clean
-  (let [target-dir (meta-libdir project)
-        jars (dependent-jars (project/set-profiles project [:metajar]))]
+    (when (not (ancestor? base-target target-dir))
+      (main/abort (normalize target-dir) "is outside of the target-path directory."))
 
-    (copy-files-to jars target-dir)
-    (main/info "Copied" (count jars) "dependencies to target:" (.getName target-dir))))
+    ;; make the basic jar
+    (jar/jar project)
+
+    ;; after jar because jar does a clean
+    (let [jars (dependent-jars project)]
+
+      (copy-files-to jars target-dir)
+      (main/info "Copied" (count jars) "dependencies to target" (normalize target-dir)))))
